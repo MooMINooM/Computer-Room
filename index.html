@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Check-in: ห้องปฏิบัติการคอมพิวเตอร์</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #ec4899;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden; /* ป้องกัน Scroll */
+        }
+
+        .dashboard {
+            background: var(--glass);
+            width: 100%;
+            max-width: 900px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            display: grid;
+            grid-template-columns: 1fr 1.2fr; /* แบ่งซ้ายขวา */
+            overflow: hidden;
+            animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        /* ฝั่งซ้าย: ส่วนกรอกข้อมูล */
+        .input-section {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-right: 1px solid #eee;
+        }
+
+        /* นาฬิกา */
+        .clock-widget {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .time { font-size: 3.5rem; font-weight: 600; color: var(--primary); line-height: 1; }
+        .date { font-size: 1.2rem; color: #666; margin-top: 5px; }
+
+        /* ช่องกรอกรหัส */
+        .input-box {
+            position: relative;
+            width: 100%;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.5rem;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            text-align: center;
+            font-family: 'Prompt', sans-serif;
+            transition: all 0.3s;
+            outline: none;
+            box-sizing: border-box;
+        }
+        input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+        }
+
+        /* ปุ่มกด */
+        .btn-checkin {
+            margin-top: 20px;
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            font-weight: 600;
+        }
+        .btn-checkin:hover { background: #4338ca; transform: scale(1.02); }
+        .btn-checkin:active { transform: scale(0.95); }
+
+        /* ฝั่งขวา: ประวัติล่าสุด */
+        .history-section {
+            padding: 30px;
+            background: #f9fafb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .history-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .badge {
+            background: var(--secondary);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .log-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 400px;
+            padding-right: 5px;
+        }
+
+        /* การ์ดรายการ */
+        .log-item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: slideIn 0.3s ease-out;
+            border-left: 5px solid var(--primary);
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: #e0e7ff;
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .log-info h4 { margin: 0; font-size: 1rem; color: #333; }
+        .log-info p { margin: 0; font-size: 0.8rem; color: #888; }
+        .log-time { margin-left: auto; font-size: 0.9rem; font-weight: bold; color: var(--primary); }
+
+        /* Scrollbar สวยๆ */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes slideIn { 0% { opacity: 0; transform: translateX(20px); } 100% { opacity: 1; transform: translateX(0); } }
+
+        /* Responsive สำหรับมือถือ */
+        @media (max-width: 768px) {
+            .dashboard { grid-template-columns: 1fr; max-width: 100%; border-radius: 0; height: 100vh; }
+            .input-section { border-right: none; padding: 20px; border-bottom: 1px solid #eee; }
+            .history-section { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <div class="input-section">
+            <div class="clock-widget">
+                <div class="time" id="clockTime">00:00</div>
+                <div class="date" id="clockDate">...</div>
+            </div>
+
+            <div class="input-box">
+                <input type="number" id="studentId" placeholder="กรอก/สแกน รหัสนักเรียน" autofocus>
+            </div>
+            
+            <button class="btn-checkin" onclick="checkIn()">✅ ลงชื่อเข้าใช้</button>
+            <p style="margin-top: 15px; color: #888; font-size: 0.9rem;">ระบบบันทึกเวลาเรียนออนไลน์ v2.0</p>
+        </div>
+
+        <div class="history-section">
+            <div class="history-header">
+                ล่าสุดวันนี้
+                <span class="badge" id="countBadge">0 คน</span>
+            </div>
+            <div class="log-list" id="logList">
+                <div style="text-align: center; color: #aaa; margin-top: 50px;" id="emptyMsg">
+                    ยังไม่มีใครเข้าใช้งาน
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="beepSound" src="data:audio/mp3;base64,SUQzBAAAAAABAFRYWFQAAAASAAADbWFqb3JfYnJhbmQAbXA0MgBUWFhUAAAAEQAAA21pbm9yX3ZlcnNpb24AMABUWFhUAAAAHAAAA2NvbXBhdGlibGVfYnJhbmRzAGlzb21tcDQyVVRVEAAAAA6AAAAAAABAAAAAAAAAAAAAAAB//uQZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIwAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBA//uQZAAAAAAAABAAAAAAAAAAAAAAABAAAOGAAAAYAAAABhAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAP/7kGQAAAAAAAAGAAAAAAAAAAAAAAAEAAA4YAAABgAAAAGEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAA//uQZAAAAAAAABAAAAAAAAAAAAAAABAAAOGAAAAYAAAABhAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAP/7kGQAAAAAAAAGAAAAAAAAAAAAAAAEAAA4YAAABgAAAAGEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAA//uQZAAAAAAAABAAAAAAAAAAAAAAABAAAOGAAAAYAAAABhAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAP/7kGQAAAAAAAAGAAAAAAAAAAAAAAAEAAA4YAAABgAAAAGEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAA//uQZAAAAAAAABAAAAAAAAAAAAAAABAAAOGAAAAYAAAABhAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAP/7kGQAAAAAAAAGAAAAAAAAAAAAAAAEAAA4YAAABgAAAAGEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAA//uQZAAAAAAAABAAAAAAAAAAAAAAABAAAOGAAAAYAAAABhAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAP/7kGQAAAAAAAAGAAAAAAAAAAAAAAAEAAA4YAAABgAAAAGEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAA//uQZAAACAAABAAAAIwAAAAMAAAAEAAAD6AAAA2gAAAPoAAAAGAAAAAYAAAAAAAAAAAAAAAEAAA4YAAABgAAAAGEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAA//uQZAACAAABAAAAIwAAAAMAAAAEAAAD6AAAA2gAAAPoAAAAGAAAAAYAAAAAAAAAAAAAAAEAAA4YAAABgAAAAGEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAA"></audio>
+
+    <script>
+        // ==========================================
+        // 1. ใส่ URL ของ Google Apps Script ที่นี่
+        // ==========================================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7-a3jF3Cw5RA3K0blQN5hab1K0yndr6N5DIFnACEnjZ7aqY1YyZ1EEIT3A5KXkKvM/exec'; 
+
+        /// ตัวแปรเก็บรายชื่อ (เริ่มต้นเป็นค่าว่าง เดี๋ยวรอโหลดจาก Google Sheets)
+        let studentDatabase = {};
+        let isDatabaseLoaded = false;
+        let checkedInList = []; // ป้องกันการเช็คชื่อซ้ำ
+
+        // เริ่มต้นทำงาน
+        document.addEventListener('DOMContentLoaded', () => {
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // โหลดรายชื่อนักเรียนทันทีที่เปิดเว็บ
+            loadStudentData();
+        });
+
+        // ฟังก์ชันโหลดรายชื่อจาก Google Sheets
+        function loadStudentData() {
+            const statusMsg = document.getElementById('clockDate'); // ยืมพื้นที่ตรงวันที่แสดงสถานะ
+            statusMsg.innerText = "⏳ กำลังดึงรายชื่อนักเรียน...";
+            statusMsg.style.color = "#f59e0b";
+
+            fetch(SCRIPT_URL)
+                .then(response => response.json())
+                .then(data => {
+                    studentDatabase = data;
+                    isDatabaseLoaded = true;
+                    
+                    // โหลดเสร็จแล้ว คืนค่าวันที่ และปลดล็อคช่องกรอก
+                    updateClock(); 
+                    document.getElementById('studentId').removeAttribute('disabled');
+                    document.getElementById('studentId').focus();
+                    
+                    // แจ้งเตือนมุมขวาบนเบาๆ
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'อัพเดตรายชื่อเรียบร้อย',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    statusMsg.innerText = "❌ โหลดรายชื่อไม่สำเร็จ (โปรดรีเฟรช)";
+                    statusMsg.style.color = "red";
+                });
+        }
+
+        // กด Enter
+        document.getElementById("studentId").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") checkIn();
+        });
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clockTime').innerText = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            // ถ้าโหลดยังไม่เสร็จ อย่าเพิ่งแสดงวันที่ ให้แสดงสถานะโหลดก่อน
+            if(isDatabaseLoaded) {
+                 document.getElementById('clockDate').innerText = now.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                 document.getElementById('clockDate').style.color = "#666";
+            }
+        }
+
+        function checkIn() {
+            // ถ้าข้อมูลยังโหลดไม่เสร็จ ห้ามทำงาน
+            if (!isDatabaseLoaded) return;
+
+            const idInput = document.getElementById('studentId');
+            const id = idInput.value.trim();
+
+            if (!id) return;
+
+            // 1. เช็คว่าซ้ำไหม
+            if (checkedInList.includes(id)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'เช็คชื่อไปแล้วครับ',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                idInput.value = '';
+                return;
+            }
+
+            // 2. ค้นหาชื่อ (จากตัวแปรที่โหลดมา)
+            const name = studentDatabase[id];
+            
+            if (!name) {
+                // ถ้าไม่เจอชื่อในฐานข้อมูล
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่พบรหัสนี้',
+                    text: 'กรุณาตรวจสอบรหัสนักเรียน หรือติดต่อครู',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                idInput.value = '';
+                return;
+            }
+            
+            // 3. ถ้าเจอชื่อ -> ทำงานต่อ
+            playSound();
+            
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            Toast.fire({ icon: 'success', title: `ยินดีต้อนรับ! \n${name}` });
+
+            addLogCard(id, name);
+            sendToGoogleSheets(id, name);
+            
+            // เพิ่มเข้า List กันซ้ำ
+            checkedInList.push(id);
+
+            idInput.value = '';
+            idInput.focus();
+        }
+
+        function addLogCard(id, name) {
+            const list = document.getElementById('logList');
+            const emptyMsg = document.getElementById('emptyMsg');
+            if(emptyMsg) emptyMsg.style.display = 'none';
+
+            const time = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            
+            const div = document.createElement('div');
+            div.className = 'log-item';
+            div.innerHTML = `
+                <div class="avatar">${id.slice(-2)}</div>
+                <div class="log-info">
+                    <h4>${name}</h4>
+                    <p>รหัส: ${id}</p>
+                </div>
+                <div class="log-time">${time}</div>
+            `;
+            
+            list.insertBefore(div, list.firstChild);
+            
+            // อัพเดตยอด
+            // (ต้องประกาศ studentCount เป็น Global ถ้าย้ายมาจากโค้ดเก่า แต่ในที่นี้ละไว้เพื่อให้สั้นลง)
+            let badge = document.getElementById('countBadge');
+            let count = parseInt(badge.innerText) || 0;
+            badge.innerText = `${count + 1} คน`;
+        }
+
+        function sendToGoogleSheets(id, name) {
+            const formData = new FormData();
+            formData.append('id', id);
+            formData.append('name', name);
+            // ใช้ no-cors เหมือนเดิมสำหรับ POST
+            fetch(SCRIPT_URL, { method: 'POST', body: formData, mode: 'no-cors' })
+                .catch(err => console.error(err));
+        }
+
+        function playSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 800; 
+                gainNode.gain.value = 0.1; 
+                oscillator.start();
+                setTimeout(() => oscillator.stop(), 150); 
+            } catch (e) { }
+        }
+    </script>
