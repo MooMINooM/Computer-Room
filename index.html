@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Classroom Check-in</title>
+    <title>ระบบบันทึกการเข้าใช้ห้องคอมพิวเตอร์โรงเรียนบ้านภูพระโนนผักหวาน</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -13,32 +13,31 @@
             --primary: #4f46e5;
             --secondary: #ec4899;
             --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --glass: rgba(255, 255, 255, 0.95);
+            --glass: rgba(255, 255, 255, 0.97); /* เพิ่มความทึบแสงนิดหน่อยเพื่อให้อ่านง่าย */
         }
 
         body {
             font-family: 'Prompt', sans-serif;
             background: var(--bg-gradient);
-            min-height: 100vh;
+            height: 100vh; /* เต็มความสูงจอ */
+            margin: 0;
+            padding: 0; /* เอา padding ออกเพื่อให้เต็มจอจริง */
+            overflow: hidden; /* ซ่อน scrollbar */
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 0;
-            padding: 20px;
-            overflow: hidden; 
         }
 
         .dashboard {
             background: var(--glass);
-            width: 100%;
-            max-width: 1000px;
-            height: 600px;
-            border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            width: 100vw;  /* เต็มความกว้าง */
+            height: 100vh; /* เต็มความสูง */
+            max-width: none; /* ยกเลิกการจำกัดความกว้าง */
+            border-radius: 0; /* เอามุมโค้งออก */
+            box-shadow: none;
             display: grid;
-            grid-template-columns: 1fr 1.2fr;
+            grid-template-columns: 1fr 1fr; /* แบ่งครึ่งซ้ายขวาเท่ากัน */
             overflow: hidden;
-            animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
         /* --- ฝั่งซ้าย: Input --- */
@@ -46,23 +45,33 @@
             padding: 40px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: center; /* จัดให้อยู่กึ่งกลางแนวตั้ง */
             align-items: center;
             border-right: 1px solid #eee;
             position: relative;
+            text-align: center;
+        }
+
+        /* ชื่อโรงเรียน */
+        .school-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 30px;
+            line-height: 1.3;
         }
 
         .clock-widget {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
-        .time { font-size: 4rem; font-weight: 600; color: var(--primary); line-height: 1; text-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
+        .time { font-size: 3.5rem; font-weight: 600; color: #333; line-height: 1; }
         .date { font-size: 1.1rem; color: #666; margin-top: 10px; }
 
-        .input-box { width: 80%; position: relative; }
+        .input-box { width: 70%; position: relative; margin-bottom: 20px; }
         input[type="number"] {
             width: 100%;
-            padding: 20px;
+            padding: 15px 20px;
             font-size: 1.8rem;
             border: 3px solid #ddd;
             border-radius: 50px;
@@ -77,27 +86,51 @@
             border-color: var(--primary);
             box-shadow: 0 0 0 5px rgba(79, 70, 229, 0.2);
         }
+
+        /* ปุ่มกดที่เพิ่มกลับมา */
+        .btn-checkin {
+            width: 70%;
+            padding: 15px;
+            background: var(--primary);
+            /* หรือใช้ Gradient: background: linear-gradient(to right, var(--primary), var(--secondary)); */
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-family: 'Prompt', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        .btn-checkin:hover {
+            background: #4338ca;
+            transform: translateY(-2px);
+        }
+        .btn-checkin:active {
+            transform: translateY(1px);
+        }
         
         .status-text {
-            margin-top: 20px;
+            margin-top: 25px;
             font-size: 0.9rem;
             color: #888;
-            height: 20px;
         }
 
         /* --- ฝั่งขวา: Log --- */
         .history-section {
-            padding: 30px;
+            padding: 40px;
             background: #f9fafb;
             display: flex;
             flex-direction: column;
+            border-left: 2px solid rgba(0,0,0,0.05); /* เพิ่มเส้นคั่นให้ชัดขึ้น */
         }
         
         .history-header {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 600;
             color: #333;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -110,7 +143,7 @@
             color: white;
             padding: 5px 15px;
             border-radius: 20px;
-            font-size: 0.9rem;
+            font-size: 1rem;
             box-shadow: 0 4px 6px rgba(236, 72, 153, 0.3);
         }
 
@@ -136,8 +169,8 @@
         .log-item:hover { transform: translateX(5px); }
         
         .avatar {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             background: #e0e7ff;
             color: var(--primary);
             border-radius: 50%;
@@ -145,12 +178,12 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-right: 15px;
         }
 
-        .log-info h4 { margin: 0; font-size: 1.1rem; color: #333; }
-        .log-info p { margin: 0; font-size: 0.85rem; color: #888; }
+        .log-info h4 { margin: 0; font-size: 1.2rem; color: #333; }
+        .log-info p { margin: 0; font-size: 0.9rem; color: #888; }
         .log-time { margin-left: auto; font-size: 1rem; font-weight: bold; color: var(--primary); }
 
         /* Scrollbar */
@@ -158,15 +191,16 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes slideIn { 0% { opacity: 0; transform: translateX(20px); } 100% { opacity: 1; transform: translateX(0); } }
 
         /* Responsive */
-        @media (max-width: 800px) {
-            .dashboard { grid-template-columns: 1fr; height: 100vh; border-radius: 0; }
-            .input-section { padding: 30px; height: 40%; border-right: none; border-bottom: 1px solid #eee; }
-            .history-section { height: 60%; }
+        @media (max-width: 900px) {
+            .dashboard { grid-template-columns: 1fr; }
+            .input-section { padding: 30px; height: auto; min-height: 50%; border-right: none; border-bottom: 1px solid #eee; }
+            .history-section { height: auto; min-height: 50%; }
+            .school-title { font-size: 1.5rem; }
             .time { font-size: 3rem; }
+            .input-box, .btn-checkin { width: 90%; }
         }
     </style>
 </head>
@@ -174,25 +208,29 @@
 
     <div class="dashboard">
         <div class="input-section">
+            <h1 class="school-title">ระบบบันทึกการเข้าใช้ห้องคอมพิวเตอร์<br>โรงเรียนบ้านภูพระโนนผักหวาน</h1>
+
             <div class="clock-widget">
                 <div class="time" id="clockTime">00:00</div>
                 <div class="date" id="clockDate">กำลังเชื่อมต่อฐานข้อมูล...</div>
             </div>
 
             <div class="input-box">
-                <input type="number" id="studentId" placeholder="สแกนรหัสนักเรียน" disabled>
+                <input type="number" id="studentId" placeholder="สแกนรหัส หรือ กรอกตัวเลข" disabled>
             </div>
             
-            <div class="status-text" id="statusText">พร้อมใช้งาน</div>
+            <button class="btn-checkin" id="checkinBtn" onclick="checkIn()" disabled>✅ ลงชื่อเข้าใช้</button>
+
+            <div class="status-text" id="statusText">พร้อมใช้งาน (รองรับการสแกน)</div>
         </div>
 
         <div class="history-section">
             <div class="history-header">
-                <div>📚 ประวัติการเข้าใช้งาน</div>
+                <div>📚 ประวัติการเข้าใช้งานล่าสุด</div>
                 <span class="badge" id="countBadge">0 คน</span>
             </div>
             <div class="log-list" id="logList">
-                <div style="text-align: center; color: #ccc; margin-top: 50px; font-weight: 300;" id="emptyMsg">
+                <div style="text-align: center; color: #ccc; margin-top: 50px; font-weight: 300; font-size: 1.2rem;" id="emptyMsg">
                     ยังไม่มีข้อมูลวันนี้
                 </div>
             </div>
@@ -230,12 +268,13 @@
                     studentDatabase = data;
                     isDatabaseLoaded = true;
                     
-                    // ปลดล็อคหน้าจอ
+                    // ปลดล็อคหน้าจอ และปุ่มกด
                     document.getElementById('studentId').removeAttribute('disabled');
+                    document.getElementById('checkinBtn').removeAttribute('disabled'); // ปลดล็อคปุ่ม
                     document.getElementById('studentId').focus();
                     document.getElementById('statusText').innerText = `โหลดรายชื่อเสร็จสิ้น (${Object.keys(data).length} คน)`;
                     
-                    updateClock(); // รีเซ็ตวันที่กลับมา
+                    updateClock(); 
                     
                     Swal.fire({
                         toast: true, position: 'top-end', icon: 'success',
@@ -267,9 +306,11 @@
             if (event.key === "Enter") checkIn();
         });
 
-        // ★ ระบบ Focus Lock: คลิกที่ว่างให้เด้งกลับมาช่องกรอก (สำหรับเครื่องสแกน)
+        // ★ ระบบ Focus Lock: คลิกที่ว่างให้เด้งกลับมาช่องกรอก 
+        // (ปรับปรุงให้ไม่กระทบกับการกดปุ่มที่เพิ่มมาใหม่)
         document.addEventListener('click', function(e) {
-            if (isDatabaseLoaded && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
+            // ถ้าโหลดเสร็จแล้ว และสิ่งที่คลิกไม่ใช่ปุ่ม (BUTTON)
+            if (isDatabaseLoaded && e.target.tagName !== 'BUTTON') {
                 inputField.focus();
             }
         });
@@ -278,7 +319,10 @@
         function checkIn() {
             if (!isDatabaseLoaded) return;
             const id = inputField.value.trim();
-            if (!id) return;
+            if (!id) {
+                 inputField.focus(); // ถ้าไม่กรอกอะไร ให้โฟกัสกลับไป
+                 return;
+            }
 
             // 1. เช็คซ้ำ
             if (checkedInList.includes(id)) {
@@ -307,21 +351,17 @@
             // 3. ผ่าน: บันทึกผล
             playSound('success');
             
-            // Popup
             const Toast = Swal.mixin({
                 toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true
             });
             Toast.fire({ icon: 'success', title: `ยินดีต้อนรับ!\n${name}` });
 
-            // UI Log
             addLogCard(id, name);
-            
-            // ส่งไป Google Sheets (Background)
             sendToSheet(id, name);
 
-            // เก็บประวัติกันซ้ำ และเคลียร์ช่อง
             checkedInList.push(id);
             inputField.value = '';
+            inputField.focus(); // โฟกัสกลับไปเตรียมพร้อม
         }
 
         // สร้างการ์ดแสดงผล
